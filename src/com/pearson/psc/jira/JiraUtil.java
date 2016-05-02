@@ -1,57 +1,68 @@
 package com.pearson.psc.jira;
 
 import java.net.URI;
-import java.util.Iterator;
 
-import com.atlassian.jira.rest.client.JiraRestClient;
-import com.atlassian.jira.rest.client.domain.BasicIssue;
-import com.atlassian.jira.rest.client.domain.Issue;
-import com.atlassian.jira.rest.client.domain.IssueLink;
-import com.atlassian.jira.rest.client.domain.SearchResult;
-import com.atlassian.jira.rest.client.internal.jersey.JerseyJiraRestClientFactory;
+import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
+import com.atlassian.jira.rest.client.api.SearchRestClient;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 
 public class JiraUtil {
 
-    private static final String JIRA_URL = "http://jira.pearsoncmg.com";
-    private static final String JIRA_ADMIN_USERNAME = "vsaqumo";
-    private static final String JIRA_ADMIN_PASSWORD = "Pearson5";
+	public static JiraLoginCredentials LC = new JiraLoginCredentials(
+			"http://jira.pearsoncmg.com",
+			"vsaqumo",
+			"Pearson5"
+			);
+	public static void main(String[] args) {
+		findIssueByIssueKey(LC, "PSCDEV-96034");
+	
+	}
 
-    public static void main(String[] args) throws Exception {
-    	  
-        JerseyJiraRestClientFactory f = new JerseyJiraRestClientFactory();
-        JiraRestClient jc = f.createWithBasicHttpAuthentication(new URI(JIRA_URL), JIRA_ADMIN_USERNAME, JIRA_ADMIN_PASSWORD);
- 
-        SearchResult r = jc.getSearchClient().searchJql("Status=Closed", null);
-         
-        Iterator<BasicIssue> it = r.getIssues().iterator();
-        while (it.hasNext()) {
-             
-            Issue issue = jc.getIssueClient().getIssue(((BasicIssue)it.next()).getKey(), null);
-             
-            System.out.println("Epic: " + issue.getKey() + " " + issue.getSummary());
-             
-            Iterator<IssueLink> itLink = issue.getIssueLinks().iterator();
-            while (itLink.hasNext()) {
-                 
-                IssueLink issueLink = (IssueLink)itLink.next();
-                Issue issueL = jc.getIssueClient().getIssue((issueLink).getTargetIssueKey(), null);
-                 
-                System.out.println(issueLink.getIssueLinkType().getDescription() + ": " + issueL.getKey() + " " + issueL.getSummary());
-                 
-            }
-             
-        }
-         /*
-        try {
-            Client client = Client.create();    
-            client.addFilter(new HTTPBasicAuthFilter(JIRA_ADMIN_USERNAME, JIRA_ADMIN_PASSWORD));
-            WebResource webResource = client.resource(JIRA_URL);
-            ClientResponse response = webResource.accept("application/json").get(ClientResponse.class);
-            String output = response.getEntity(String.class);
-            System.out.println("Output from Server .... \n");
-            System.out.println(output);         
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
-    }
+	public static Issue findIssueByIssueKey(JiraLoginCredentials lc, String issueKey) {
+		JiraRestClient jiraRestClient = createJiraRestClient(lc);
+		SearchRestClient searchClient = jiraRestClient.getSearchClient();
+		String jql = "issuekey = \"" + issueKey + "\"";
+		SearchResult results = searchClient.searchJql(jql).claim();
+		destroyJiraRestClient(jiraRestClient);
+    	return results.getIssues().iterator().next();
+	}
+	
+	private static JiraRestClient createJiraRestClient(JiraLoginCredentials lc) {
+		final JiraRestClientFactory jiraRestClientFactory = new AsynchronousJiraRestClientFactory();
+		return jiraRestClientFactory
+				.createWithBasicHttpAuthentication(URI.create(lc.getUrl()),
+						lc.getUsername(), lc.getPassword());
+	}
+
+	private static void destroyJiraRestClient(JiraRestClient jiraRestClient) {
+		try {
+			jiraRestClient.destroy();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static class JiraLoginCredentials {
+		private String url;
+		private String username;
+		private String password;
+		public JiraLoginCredentials(String url, String username, String password) {
+			super();
+			this.url = url;
+			this.username = username;
+			this.password = password;
+		}
+		public String getUrl() {
+			return url;
+		}
+		public String getUsername() {
+			return username;
+		}
+		public String getPassword() {
+			return password;
+		}
+	}
 }
