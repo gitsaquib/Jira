@@ -1,4 +1,6 @@
 import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Set;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
@@ -11,21 +13,50 @@ import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientF
 
 public class JiraUtil {
 
-	public static JiraLoginCredentials LC = new JiraLoginCredentials(
-			"http://jira.pearsoncmg.com/jira",
-			"vsaqumo",
-			"Pearson5"
-			);
+	public static JiraLoginCredentials LC = new JiraLoginCredentials( "http://jira.pearsoncmg.com/jira", "vsaqumo", "Pearson5");
 	public static void main(String[] args) {
-		Issue issue = findIssueByIssueKey(LC, "PSCDEV-96034");
-		IssueField foundVia = issue.getFieldByName("Found Via");
-		System.out.println(foundVia.getValue());
+		retrieveIssueDetails("PSCDEV-96034");
+	}
+	
+	public static IssueAttributes retrieveIssueDetails(String jiraId){
+		IssueAttributes issueAttributes = new IssueAttributes();
+		Issue issue = findIssueByIssueKey(LC, jiraId);
+		
+		IssueField foundViaStr = issue.getFieldByName("Found Via");
+		boolean foundVia = null != foundViaStr? foundViaStr.equals("Automated Test") : false;
+		issueAttributes.setFoundVia(foundVia);
+		
 		Set<String> labels = issue.getLabels();
 		if(labels.contains("Automation")) {
-			System.out.println("This is found in automation");
+			issueAttributes.setAutomationLabel(true);
 		} else {
-			System.out.println("This is found in manual");
+			issueAttributes.setAutomationLabel(false);
 		}
+		
+		String summary = issue.getSummary();
+		SimpleDateFormat formatter = new SimpleDateFormat("MMM-yyyy");
+    	Date today = new Date();
+    	String month_yyyy = formatter.format(today);
+		if(summary.contains("[RT-"+month_yyyy+"]")) {
+			issueAttributes.setRegressionLabelInSummary(true);
+		} else {
+			issueAttributes.setRegressionLabelInSummary(false);
+		}
+		
+		if(summary.contains("[Automation]")) {
+			issueAttributes.setAutomationLabelInSummary(true);
+		} else {
+			issueAttributes.setAutomationLabelInSummary(false);
+		}
+		
+		String appLabel = "";
+		if(labels.contains("2-12_app")) {
+			appLabel = "2-12_app";
+		} else {
+			appLabel = "K-1_app";
+		}
+		issueAttributes.setAppLabel(appLabel);
+		
 		String description = issue.getDescription();
 		if(description.toLowerCase().contains("cc") || 
 				description.toLowerCase().contains("configcode") || 
@@ -34,10 +65,17 @@ public class JiraUtil {
 				description.toLowerCase().contains("4mvreviewv2") ||
 				description.toLowerCase().contains("4mvassessmts")
 				) {
-			System.out.println("Config Code is found in description");
+			if(description.toLowerCase().contains("ccsocdct")) {
+				
+			} else if(description.toLowerCase().contains("ccsocdct")) {
+				
+			} else if(description.toLowerCase().contains("ccsocdct")) {
+				
+			}
 		} else {
 			System.out.println("Missing Config Code in description");
 		}
+		return issueAttributes;
 	}
 
 	public static Issue findIssueByIssueKey(JiraLoginCredentials lc, String issueKey) {

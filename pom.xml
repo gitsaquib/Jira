@@ -53,7 +53,7 @@
 	    <artifactId>exec-maven-plugin</artifactId>
 	    <version>2.3.2</version>
 	    <configuration>
-	      <mainClass>com.pearson.psc.jira.JiraUtil</mainClass>
+	      <mainClass>JiraUtil</mainClass>
 	    </configuration>
 	   </plugin>
 	   <plugin>
