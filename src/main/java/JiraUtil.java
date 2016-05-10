@@ -1,11 +1,15 @@
 import java.net.URI;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
+import com.atlassian.jira.rest.client.api.domain.BasicComponent;
+import com.atlassian.jira.rest.client.api.domain.BasicPriority;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
@@ -15,7 +19,10 @@ public class JiraUtil {
 
 	public static JiraLoginCredentials LC = new JiraLoginCredentials( "http://jira.pearsoncmg.com/jira", "vsaqumo", "Pearson5");
 	public static void main(String[] args) {
-		retrieveIssueDetails("PSCDEV-96034");
+		IssueAttributes attributes = retrieveIssueDetails("PSCDEV-96349");
+		for(String component:attributes.getComponents()) {
+			System.out.println(component);
+		}
 	}
 	
 	public static IssueAttributes retrieveIssueDetails(String jiraId){
@@ -66,15 +73,64 @@ public class JiraUtil {
 				description.toLowerCase().contains("4mvassessmts")
 				) {
 			if(description.toLowerCase().contains("ccsocdct")) {
-				
-			} else if(description.toLowerCase().contains("ccsocdct")) {
-				
-			} else if(description.toLowerCase().contains("ccsocdct")) {
-				
+				issueAttributes.setConfigCode("ccsocdct");
+			} else if(description.toLowerCase().contains("4mvreviewv2")) {
+				issueAttributes.setConfigCode("4mvreviewv2");
+			} else if(description.toLowerCase().contains("4mvassessmts")) {
+				issueAttributes.setConfigCode("4mvassessmts");
+			} else if(description.toLowerCase().contains("prsnuat01")) {
+				issueAttributes.setConfigCode("prsnuat01");
+			} else if(description.toLowerCase().contains("prsnqa01")) {
+				issueAttributes.setConfigCode("prsnqa01");
+			} else if(description.toLowerCase().contains("prsnqa02")) {
+				issueAttributes.setConfigCode("prsnqa02");
 			}
-		} else {
-			System.out.println("Missing Config Code in description");
 		}
+		
+		if(description.toLowerCase().contains("1.6")) {
+			issueAttributes.setBuildVersion(description.substring(description.indexOf("1.6"), description.indexOf("1.6")+10));
+		}
+		
+		if(labels.contains("iOS") || labels.contains("iOS9") || labels.contains("Windows") || labels.contains("Windows_10")) {
+			if(labels.contains("iOS")) {
+				issueAttributes.setPlatformLabel("iOS");
+			} else if(labels.contains("iOS9")) {
+				issueAttributes.setPlatformLabel("iOS9");
+			} else if(labels.contains("Windows_10")) {
+				issueAttributes.setPlatformLabel("Windows_10");
+			} else if(labels.contains("Windows")) {
+				issueAttributes.setPlatformLabel("Windows");
+			}
+		}
+		
+		BasicPriority priority = issue.getPriority();
+		if(priority.getName().equalsIgnoreCase("trivial")) {
+			issueAttributes.setTrivialPriority(true);
+		} else {
+			issueAttributes.setTrivialPriority(false);
+		}
+		
+		List<String> components =  new ArrayList<String>();
+		Iterable<BasicComponent> componentsIterable = issue.getComponents();
+		if(null != componentsIterable) {
+			for(BasicComponent component:componentsIterable) {
+				if(component.getName().contains("PSC: App Team 1")) {
+					components.add("PSC: App Team 1");
+				} else if(component.getName().contains("PSC: App Team 2")) {
+					components.add("PSC: App Team 2");
+				} else if(component.getName().contains("PSC: Authoring")) {
+					components.add("PSC: Authoring");
+				} else if(component.getName().contains("PSC: Reporting")) {
+					components.add("PSC: Reporting");
+				} else if(component.getName().contains("PSC: RunTeam")) {
+					components.add("PSC: RunTeam");
+				} else if(component.getName().contains("PSC: Services")) {
+					components.add("PSC: Services");
+				}
+			}
+		}
+		issueAttributes.setComponents(components);
+		
 		return issueAttributes;
 	}
 

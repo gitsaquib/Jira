@@ -1,3 +1,4 @@
+import java.util.List;
 
 public class IssueAttributes {
 	private	boolean	foundVia;
@@ -9,8 +10,14 @@ public class IssueAttributes {
 	private	String	buildVersion;
 	private	String	platformLabel;
 	private	boolean	trivialPriority;
-	private	boolean	stepsToReproduceFound;
+	private List<String> components;
 	
+	public List<String> getComponents() {
+		return components;
+	}
+	public void setComponents(List<String> components) {
+		this.components = components;
+	}
 	public boolean isAutomationLabel() {
 		return automationLabel;
 	}
@@ -58,12 +65,6 @@ public class IssueAttributes {
 	}
 	public void setTrivialPriority(boolean trivialPriority) {
 		this.trivialPriority = trivialPriority;
-	}
-	public boolean isStepsToReproduceFound() {
-		return stepsToReproduceFound;
-	}
-	public void setStepsToReproduceFound(boolean stepsToReproduceFound) {
-		this.stepsToReproduceFound = stepsToReproduceFound;
 	}
 	public boolean isFoundVia() {
 		return foundVia;
