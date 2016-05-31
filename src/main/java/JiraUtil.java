@@ -13,17 +13,12 @@ import com.atlassian.jira.rest.client.api.domain.BasicPriority;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 
 public class JiraUtil {
 
 	public static JiraLoginCredentials LC = new JiraLoginCredentials( "http://jira.pearsoncmg.com/jira", "vsaqumo", "Pearson5");
-	public static void main(String[] args) {
-		IssueAttributes attributes = retrieveIssueDetails("PSCDEV-96349");
-		for(String component:attributes.getComponents()) {
-			System.out.println(component);
-		}
-	}
 	
 	public static IssueAttributes retrieveIssueDetails(String jiraId){
 		IssueAttributes issueAttributes = new IssueAttributes();
@@ -88,7 +83,7 @@ public class JiraUtil {
 		}
 		
 		if(description.toLowerCase().contains("1.6")) {
-			issueAttributes.setBuildVersion(description.substring(description.indexOf("1.6"), description.indexOf("1.6")+10));
+			//issueAttributes.setBuildVersion(description.substring(description.indexOf("1.6"), description.indexOf("1.6")+10));
 		}
 		
 		if(labels.contains("iOS") || labels.contains("iOS9") || labels.contains("Windows") || labels.contains("Windows_10")) {
@@ -104,6 +99,7 @@ public class JiraUtil {
 		}
 		
 		BasicPriority priority = issue.getPriority();
+		issueAttributes.setPriority(priority.getName());
 		if(priority.getName().equalsIgnoreCase("trivial")) {
 			issueAttributes.setTrivialPriority(true);
 		} else {
@@ -130,6 +126,15 @@ public class JiraUtil {
 			}
 		}
 		issueAttributes.setComponents(components);
+		
+		List<String> versions =  new ArrayList<String>();
+		Iterable<Version> versionsIterable = issue.getFixVersions();
+		if(null != versionsIterable) {
+			for(Version version:versionsIterable) {
+				versions.add(version.getName());
+			}
+		}
+		issueAttributes.setFixVersion(versions);
 		
 		return issueAttributes;
 	}

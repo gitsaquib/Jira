@@ -11,6 +11,8 @@ public class IssueAttributes {
 	private	String	platformLabel;
 	private	boolean	trivialPriority;
 	private List<String> components;
+	private List<String> fixVersion;
+	private String priority;
 	
 	public List<String> getComponents() {
 		return components;
@@ -71,5 +73,17 @@ public class IssueAttributes {
 	}
 	public void setFoundVia(boolean foundVia) {
 		this.foundVia = foundVia;
+	}
+	public List<String> getFixVersion() {
+		return fixVersion;
+	}
+	public void setFixVersion(List<String> fixVersion) {
+		this.fixVersion = fixVersion;
+	}
+	public String getPriority() {
+		return priority;
+	}
+	public void setPriority(String priority) {
+		this.priority = priority;
 	}
 }
