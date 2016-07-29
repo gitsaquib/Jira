@@ -5,11 +5,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
 import com.atlassian.jira.rest.client.api.domain.BasicComponent;
 import com.atlassian.jira.rest.client.api.domain.BasicPriority;
+import com.atlassian.jira.rest.client.api.domain.Comment;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
@@ -18,7 +20,7 @@ import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientF
 
 public class JiraUtil {
 
-	public static JiraLoginCredentials LC = new JiraLoginCredentials( "http://jira.pearsoncmg.com/jira", "vsaqumo", "Pearson5");
+	public static JiraLoginCredentials LC = new JiraLoginCredentials( "http://jira.pearsoncmg.com/jira", "vsaqumo", "Pearson6");
 	
 	public static IssueAttributes retrieveIssueDetails(String jiraId){
 		IssueAttributes issueAttributes = new IssueAttributes();
@@ -148,13 +150,28 @@ public class JiraUtil {
     	return results.getIssues().iterator().next();
 	}
 	
+	
+	public static void addCommentToJira(String jiraId, String commentStr){
+		addComment(LC, jiraId, commentStr);
+	}
+	
+	public static void addComment(JiraLoginCredentials lc, String issueKey, String commentStr) {
+		JiraRestClient jiraRestClient = createJiraRestClient(lc);
+		IssueRestClient issueClient = jiraRestClient.getIssueClient();
+		Issue issue = issueClient.getIssue(issueKey).claim();
+		Comment comment = Comment.valueOf(commentStr);
+		issueClient.addComment(issue.getCommentsUri(), comment);
+		destroyJiraRestClient(jiraRestClient);
+	}
+	
+	
 	private static JiraRestClient createJiraRestClient(JiraLoginCredentials lc) {
 		final JiraRestClientFactory jiraRestClientFactory = new AsynchronousJiraRestClientFactory();
 		return jiraRestClientFactory
 				.createWithBasicHttpAuthentication(URI.create(lc.getUrl()),
 						lc.getUsername(), lc.getPassword());
 	}
-
+	
 	private static void destroyJiraRestClient(JiraRestClient jiraRestClient) {
 		try {
 			jiraRestClient.close();

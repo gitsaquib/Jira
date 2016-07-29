@@ -7,9 +7,18 @@ public class JiraMain {
 
 	public static void main(String[] args) {
 		try {
-			getJiraDefectDetails();
+			updateJiraDefectDetails();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	private static void updateJiraDefectDetails() throws FileNotFoundException {
+		File file = new File("D:\\Jira.txt");
+		Scanner sc = new Scanner(new FileReader(file));
+		while (sc.hasNextLine()){
+			String id = sc.nextLine();
+			JiraUtil.addCommentToJira(id, "Testing");
 		}
 	}
 	
